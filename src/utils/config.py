@@ -28,3 +28,8 @@ VALIDATION_RESULTS_DIR = DATA_DIR / "processed" / "validation"
 
 # Exported visualizations (case study plots: PNG, HTML)
 FIGURES_DIR = DATA_DIR / "processed" / "figures"
+
+# Uncertainty-aware recommendation (pit window, sensitivity, VSC)
+PIT_WINDOW_WITHIN_SEC = 2.0
+DEGRADATION_SENSITIVITY_DELTA_SEC_PER_LAP = 0.02
+VSC_PIT_LOSS_FACTOR = 0.5
