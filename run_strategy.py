@@ -227,10 +227,23 @@ def main() -> int:
     print()
     if ex:
         print("Explanation:")
-        print(f"  {ex['why_pit_window_opens']}")
-        print(f"  {ex['when_degradation_overtakes']}")
-        print(f"  {ex['cost_of_delaying']}")
-        print(f"  {ex['cost_of_advancing']}")
+        print(ex.get("summary_display", ex["summary"]))
+        # Parameter sensitivity: pit loss ±2 s impact
+        try:
+            from src.strategy.sensitivity import sensitivity_pit_loss
+            sens = sensitivity_pit_loss(
+                current_lap=lap,
+                current_compound=current_compound,
+                lap_in_stint=lap_in_stint,
+                total_race_laps=total_race_laps,
+                track_id=track_id,
+                new_compound=new_compound,
+                pit_loss_delta_sec=2.0,
+                degradation_model=model,
+            )
+            print("\nSensitivity (pit loss ±2 s):", sens["message"])
+        except Exception:  # pylint: disable=broad-except
+            pass
     return 0
 
 

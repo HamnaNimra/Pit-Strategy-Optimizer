@@ -44,3 +44,4 @@ htmlcov/
 Thumbs.db
 *.swp
 *.swo
+**/debug.log

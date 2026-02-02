@@ -12,6 +12,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+# Default figure size for readable, portfolio-ready plots
+DEFAULT_FIGSIZE = (10, 4)
+
 # Default colors for compounds (caller can override)
 DEFAULT_COMPOUND_COLORS = {
     "SOFT": "C0",
@@ -26,6 +29,7 @@ def plot_strategy_timeline(
     pit_laps: Sequence[int] | None = None,
     pit_window: tuple[int, int] | None = None,
     ax: plt.Axes | None = None,
+    figsize: tuple[float, float] = DEFAULT_FIGSIZE,
     title: str | None = None,
     xlabel: str = "Lap number",
     compound_colors: dict[str, str] | None = None,
@@ -59,7 +63,7 @@ def plot_strategy_timeline(
     matplotlib.axes.Axes
     """
     if ax is None:
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(figsize=figsize)
     colors = compound_colors if compound_colors is not None else DEFAULT_COMPOUND_COLORS
 
     # Stint segments: horizontal bars at y=0, length = end - start + 1
@@ -164,7 +168,7 @@ def plot_strategy_timeline_from_laps(
         or compound_col not in subset.columns
     ):
         if ax is None:
-            _, ax = plt.subplots()
+            _, ax = plt.subplots(figsize=DEFAULT_FIGSIZE)
         return ax
 
     # Build stints: by stint_id or by compound change
@@ -214,3 +218,68 @@ def plot_strategy_timeline_from_laps(
         ax=ax,
         title=title,
     )
+
+
+def plot_strategy_timeline_plotly(
+    stints: Sequence[tuple[int, int, str]],
+    *,
+    pit_laps: Sequence[int] | None = None,
+    pit_window: tuple[int, int] | None = None,
+    title: str | None = None,
+    xlabel: str = "Lap number",
+    compound_colors: dict[str, str] | None = None,
+):
+    """
+    Build an interactive plotly figure: strategy timeline with stints, pit stops, pit window.
+    Use with export_plotly_html(fig, path) for portfolio display.
+    """
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError("plotly is required for HTML export; pip install plotly") from None
+    colors = compound_colors if compound_colors is not None else DEFAULT_COMPOUND_COLORS
+    fig = go.Figure()
+    seen_compounds = set()
+    for start, end, compound in stints:
+        comp_upper = str(compound).upper()
+        color = colors.get(comp_upper, "gray")
+        name = comp_upper if comp_upper not in seen_compounds else None
+        if name:
+            seen_compounds.add(comp_upper)
+        fig.add_vrect(
+            x0=start - 0.5,
+            x1=end + 0.5,
+            fillcolor=color,
+            opacity=0.6,
+            layer="below",
+            line_width=0,
+        )
+        # Legend entry (invisible trace)
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers",
+                marker=dict(size=12, color=color, symbol="square"),
+                name=name or comp_upper,
+                showlegend=bool(name),
+            )
+        )
+    if pit_laps:
+        for lap in pit_laps:
+            fig.add_vline(x=lap, line_dash="dash", line_color="black", line_width=1)
+    if pit_window is not None:
+        lap_min, lap_max = pit_window
+        fig.add_vrect(x0=lap_min - 0.5, x1=lap_max + 0.5, fillcolor="green", opacity=0.2)
+    x_min = min(s[0] for s in stints) - 1 if stints else 0
+    x_max = max(s[1] for s in stints) + 1 if stints else 60
+    fig.update_layout(
+        title=title or "Strategy timeline",
+        xaxis_title=xlabel,
+        xaxis=dict(range=[x_min, x_max]),
+        yaxis=dict(visible=False, range=[0, 1]),
+        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
+        font=dict(size=12),
+        margin=dict(l=40, r=40, t=50, b=50),
+    )
+    return fig

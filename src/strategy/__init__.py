@@ -14,6 +14,7 @@ from src.strategy.pit_loss import (
     get_pit_loss,
     set_pit_loss_for_testing,
 )
+from src.strategy.sensitivity import sensitivity_pit_loss
 
 __all__ = [
     "get_pit_loss",
@@ -27,4 +28,5 @@ __all__ = [
     "explain_cost_of_delaying",
     "explain_cost_of_advancing",
     "explain_strategy",
+    "sensitivity_pit_loss",
 ]

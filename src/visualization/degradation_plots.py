@@ -28,12 +28,17 @@ def _lap_time_to_seconds(series: pd.Series) -> pd.Series:
     return pd.to_numeric(series, errors="coerce")
 
 
+# Default figure size for readable, portfolio-ready plots
+DEFAULT_FIGSIZE = (10, 5)
+
+
 def plot_predicted_vs_actual(
     lap_numbers: np.ndarray | pd.Series | list,
     actual_seconds: np.ndarray | pd.Series | list,
     predicted_seconds: np.ndarray | pd.Series | list,
     *,
     ax: plt.Axes | None = None,
+    figsize: tuple[float, float] = DEFAULT_FIGSIZE,
     title: str | None = None,
     actual_label: str = "Actual",
     predicted_label: str = "Predicted",
@@ -65,7 +70,7 @@ def plot_predicted_vs_actual(
     matplotlib.axes.Axes
     """
     if ax is None:
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(figsize=figsize)
     lap = _as_array(lap_numbers)
     actual = _as_array(actual_seconds)
     pred = _as_array(predicted_seconds)
@@ -125,7 +130,7 @@ def plot_predicted_vs_actual_from_laps(
         or lap_time_col not in subset.columns
     ):
         if ax is None:
-            _, ax = plt.subplots()
+            _, ax = plt.subplots(figsize=DEFAULT_FIGSIZE)
         return ax
     lap_numbers = subset[lap_col].values
     actual = _lap_time_to_seconds(subset[lap_time_col]).values
@@ -177,7 +182,7 @@ def plot_degradation_curve(
     matplotlib.axes.Axes
     """
     if ax is None:
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(figsize=DEFAULT_FIGSIZE)
     if curve.empty or lap_col not in curve.columns or time_col not in curve.columns:
         return ax
     x = curve[lap_col].values
@@ -226,7 +231,7 @@ def plot_degradation_curves_by_compound(
     matplotlib.axes.Axes
     """
     if ax is None:
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(figsize=DEFAULT_FIGSIZE)
     for compound, df in curves.items():
         if df.empty or lap_col not in df.columns or time_col not in df.columns:
             continue
@@ -245,3 +250,39 @@ def plot_degradation_curves_by_compound(
     ax.legend()
     ax.grid(True, alpha=0.3)
     return ax
+
+
+def plot_predicted_vs_actual_plotly(
+    lap_numbers: np.ndarray | pd.Series | list,
+    actual_seconds: np.ndarray | pd.Series | list,
+    predicted_seconds: np.ndarray | pd.Series | list,
+    *,
+    title: str | None = None,
+    actual_label: str = "Actual",
+    predicted_label: str = "Predicted",
+    xlabel: str = "Lap number",
+    ylabel: str = "Lap time (s)",
+):
+    """
+    Build an interactive plotly figure: predicted vs actual lap times.
+    Use with export_plotly_html(fig, path) for portfolio display.
+    """
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError("plotly is required for HTML export; pip install plotly") from None
+    lap = np.asarray(lap_numbers)
+    actual = np.asarray(actual_seconds)
+    pred = np.asarray(predicted_seconds)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=lap.tolist(), y=actual.tolist(), mode="lines+markers", name=actual_label, line=dict(width=2)))
+    fig.add_trace(go.Scatter(x=lap.tolist(), y=pred.tolist(), mode="lines+markers", name=predicted_label, line=dict(dash="dash", width=2)))
+    fig.update_layout(
+        title=title or "Predicted vs actual lap times",
+        xaxis_title=xlabel,
+        yaxis_title=ylabel,
+        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
+        font=dict(size=12),
+        margin=dict(l=60, r=40, t=50, b=50),
+    )
+    return fig
