@@ -25,3 +25,6 @@ DEGRADATION_MODELS_DIR = MODELS_DIR / "degradation"
 
 # Validation outputs (historical comparison results)
 VALIDATION_RESULTS_DIR = DATA_DIR / "processed" / "validation"
+
+# Exported visualizations (case study plots: PNG, HTML)
+FIGURES_DIR = DATA_DIR / "processed" / "figures"
