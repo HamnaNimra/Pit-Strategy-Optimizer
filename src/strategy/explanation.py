@@ -60,9 +60,9 @@ def explain_why_pit_window_opens(
     n = int(round(break_even_laps))
     return (
         "The pit window opens when staying out would cost more than pitting. "
-        f"Pit loss is {_format_sec(pit_loss_sec)} s; degradation on current tires "
-        f"is {_format_sec(degradation_rate_sec_per_lap)} s per lap. "
-        f"After approximately {n} laps, cumulative degradation overtakes pit loss."
+        f"Pit loss is {_format_sec(pit_loss_sec)} seconds; degradation on current tires "
+        f"is {_format_sec(degradation_rate_sec_per_lap)} seconds per lap. "
+        f"After about {n} laps, cumulative degradation overtakes pit loss."
     )
 
 
@@ -95,9 +95,9 @@ def explain_when_degradation_overtakes(
     n = pit_loss_sec / degradation_rate_sec_per_lap
     n_round = int(round(n))
     return (
-        f"Degradation overtakes pit loss after approximately {n_round} laps "
-        f"({n_round} × {_format_sec(degradation_rate_sec_per_lap)} s/lap "
-        f"≈ {_format_sec(pit_loss_sec)} s pit loss)."
+        f"Degradation overtakes pit loss after about {n_round} laps "
+        f"({n_round} × {_format_sec(degradation_rate_sec_per_lap)} seconds per lap "
+        f"≈ {_format_sec(pit_loss_sec)} seconds pit loss)."
     )
 
 
@@ -126,12 +126,12 @@ def explain_cost_of_delaying(
     cost = laps_delayed * degradation_rate_sec_per_lap
     if laps_delayed == 1:
         return (
-            f"Each lap delayed costs approximately {_format_sec(degradation_rate_sec_per_lap)} s "
+            f"Each lap delayed costs about {_format_sec(degradation_rate_sec_per_lap)} seconds "
             "(current compound degradation rate)."
         )
     return (
-        f"Delaying the stop by {laps_delayed} laps costs approximately {_format_sec(cost)} s "
-        f"({laps_delayed} × {_format_sec(degradation_rate_sec_per_lap)} s/lap)."
+        f"Delaying the stop by {laps_delayed} laps costs about {_format_sec(cost)} seconds "
+        f"({laps_delayed} × {_format_sec(degradation_rate_sec_per_lap)} seconds per lap)."
     )
 
 
@@ -167,7 +167,7 @@ def explain_cost_of_advancing(
             return "No pit scenario in results; cost of advancing is not defined."
         delta = pit_rows["time_delta_from_best_sec"].iloc[0]
         return (
-            f"Pitting now (instead of staying out) costs approximately {_format_sec(delta)} s "
+            f"Pitting now (instead of staying out) costs about {_format_sec(delta)} seconds "
             "versus the optimal stay-out strategy."
         )
 
@@ -181,7 +181,7 @@ def explain_cost_of_advancing(
     delta = earlier["time_delta_from_best_sec"].iloc[0]
     return (
         f"Pitting one lap earlier than optimal (lap {best_pit_lap - 1} instead of {best_pit_lap}) "
-        f"costs approximately {_format_sec(delta)} s."
+        f"costs about {_format_sec(delta)} seconds."
     )
 
 
@@ -246,6 +246,10 @@ def explain_strategy(
 
     summary_parts = [why, when, cost_delay, cost_advance]
     summary = " ".join(summary_parts)
+    # Human-readable display: one line per section (for CLI / portfolio)
+    summary_display = "\n".join(
+        ["• " + why, "• " + when, "• " + cost_delay, "• " + cost_advance]
+    )
 
     return {
         "why_pit_window_opens": why,
@@ -253,4 +257,5 @@ def explain_strategy(
         "cost_of_delaying": cost_delay,
         "cost_of_advancing": cost_advance,
         "summary": summary,
+        "summary_display": summary_display,
     }
