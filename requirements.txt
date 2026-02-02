@@ -2,5 +2,6 @@ FastF1
 pandas
 numpy
 scikit-learn
+joblib
 matplotlib
 plotly
