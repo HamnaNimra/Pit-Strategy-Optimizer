@@ -1,5 +1,9 @@
 """Tests for visualization: strategy timeline (matplotlib + plotly), plotly color handling."""
 
+# Use non-interactive backend so tests don't require Tk/Tcl (avoids TclError on headless or broken GUI)
+import matplotlib
+matplotlib.use("Agg")
+
 import pytest
 
 from src.visualization.strategy_plots import (

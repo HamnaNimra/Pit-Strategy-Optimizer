@@ -250,8 +250,14 @@ def plot_strategy_timeline_plotly(
     try:
         import plotly.graph_objects as go
     except ImportError:
-        raise ImportError("plotly is required for HTML export; pip install plotly") from None
-    colors = compound_colors if compound_colors is not None else DEFAULT_COMPOUND_COLORS_PLOTLY
+        raise ImportError(
+            "plotly is required for HTML export; pip install plotly"
+        ) from None
+    colors = (
+        compound_colors
+        if compound_colors is not None
+        else DEFAULT_COMPOUND_COLORS_PLOTLY
+    )
     fig = go.Figure()
     seen_compounds = set()
     for start, end, compound in stints:
@@ -284,7 +290,9 @@ def plot_strategy_timeline_plotly(
             fig.add_vline(x=lap, line_dash="dash", line_color="black", line_width=1)
     if pit_window is not None:
         lap_min, lap_max = pit_window
-        fig.add_vrect(x0=lap_min - 0.5, x1=lap_max + 0.5, fillcolor="green", opacity=0.2)
+        fig.add_vrect(
+            x0=lap_min - 0.5, x1=lap_max + 0.5, fillcolor="green", opacity=0.2
+        )
     x_min = min(s[0] for s in stints) - 1 if stints else 0
     x_max = max(s[1] for s in stints) + 1 if stints else 60
     fig.update_layout(
