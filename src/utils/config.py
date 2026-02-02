@@ -22,3 +22,6 @@ SLICK_COMPOUNDS = frozenset({"SOFT", "MEDIUM", "HARD"})
 # Persisted models (e.g. tire degradation per track/compound)
 MODELS_DIR = CACHE_DIR / "models"
 DEGRADATION_MODELS_DIR = MODELS_DIR / "degradation"
+
+# Validation outputs (historical comparison results)
+VALIDATION_RESULTS_DIR = DATA_DIR / "processed" / "validation"
