@@ -222,7 +222,7 @@ def explain_strategy(
     -------
     dict[str, str]
         Keys: why_pit_window_opens, when_degradation_overtakes, cost_of_delaying,
-        cost_of_advancing, summary. Values are human-readable strings.
+        cost_of_advancing, summary (single line), summary_display (bullet lines for CLI/portfolio).
     """
     if pit_loss_sec is None:
         pit_loss_sec = get_pit_loss(track_id, overrides=pit_loss_overrides)

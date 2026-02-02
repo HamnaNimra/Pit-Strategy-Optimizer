@@ -246,14 +246,22 @@ def plot_strategy_timeline_plotly(
         name = comp_upper if comp_upper not in seen_compounds else None
         if name:
             seen_compounds.add(comp_upper)
+        fig.add_vrect(
+            x0=start - 0.5,
+            x1=end + 0.5,
+            fillcolor=color,
+            opacity=0.6,
+            layer="below",
+            line_width=0,
+        )
+        # Legend entry (invisible trace)
         fig.add_trace(
-            go.Bar(
-                x=[start + (end - start) / 2],
-                y=[1],
-                width=[end - start + 1],
-                orientation="v",
-                name=name or "",
-                marker_color=color,
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers",
+                marker=dict(size=12, color=color, symbol="square"),
+                name=name or comp_upper,
                 showlegend=bool(name),
             )
         )
@@ -263,12 +271,13 @@ def plot_strategy_timeline_plotly(
     if pit_window is not None:
         lap_min, lap_max = pit_window
         fig.add_vrect(x0=lap_min - 0.5, x1=lap_max + 0.5, fillcolor="green", opacity=0.2)
+    x_min = min(s[0] for s in stints) - 1 if stints else 0
+    x_max = max(s[1] for s in stints) + 1 if stints else 60
     fig.update_layout(
         title=title or "Strategy timeline",
         xaxis_title=xlabel,
-        yaxis=dict(visible=False, range=[0, 2]),
-        barmode="overlay",
-        bargap=0,
+        xaxis=dict(range=[x_min, x_max]),
+        yaxis=dict(visible=False, range=[0, 1]),
         legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
         font=dict(size=12),
         margin=dict(l=40, r=40, t=50, b=50),

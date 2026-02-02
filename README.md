@@ -116,13 +116,14 @@ python run_strategy.py --year 2024 --race Bahrain --driver 1 --lap 15
 python run_strategy.py --year 2023 --race Silverstone --driver HAM --lap 25 --new-compound HARD
 ```
 
-First run for a given race may take longer while FastF1 data is fetched and the degradation model is fitted; later runs use cached data and saved models.
+First run for a given race may take longer while FastF1 data is fetched and the degradation model is fitted; later runs use cached data and saved models. The CLI also prints **parameter sensitivity** (e.g. "If pit loss ±2 s, recommended pit lap changes by X") and **human-readable strategy explanations** (bullet points).
 
 ### Python API
 
 - **Load race:** `from src.data_pipeline import load_race, add_stint_features` → `data = load_race(year, race_name)`, `laps = add_stint_features(data.laps, data.pit_stops)`.
 - **Optimize:** `from src.strategy import optimize_pit_window, recommended_pit_lap` → `results = optimize_pit_window(...)`, `rec = recommended_pit_lap(results)`.
-- **Explain:** `from src.strategy import explain_strategy` → `ex = explain_strategy(results, track_id, current_compound, ...)`.
+- **Explain:** `from src.strategy import explain_strategy` → `ex = explain_strategy(...)`; use `ex["summary_display"]` for bullet-point text.
+- **Sensitivity:** `from src.strategy import sensitivity_pit_loss` → `sens = sensitivity_pit_loss(...)`; `sens["message"]` is human-readable (e.g. pit loss ±2 s impact).
 - **Validate:** `from src.validation import run_validation, save_validation_results` → `details, summary = run_validation(races, degradation_model=model)`, `save_validation_results(details, summary)`.
 
 ---
@@ -140,11 +141,22 @@ Results can be saved with `save_validation_results(details, summary)` and loaded
 
 ## Visualization
 
-- **Predicted vs actual lap times:** `plot_predicted_vs_actual(lap_numbers, actual_seconds, predicted_seconds, ...)` or `plot_predicted_vs_actual_from_laps(laps, predicted_seconds, driver_filter=...)`.
-- **Tire degradation curves:** `plot_degradation_curve(curve_df, compound_label=...)` or `plot_degradation_curves_by_compound({compound: df, ...})`.
-- **Strategy timeline:** `plot_strategy_timeline(stints, pit_laps=..., pit_window=...)` or `plot_strategy_timeline_from_laps(laps, pit_stops, driver_filter=..., pit_window=...)`.
+Plots are labeled, readable, and reproducible. Export as **PNG** or **interactive HTML** for portfolio display.
 
-All plotting functions take data as arguments; no hardcoded race or driver. See `src/visualization/` and docstrings for parameters.
+- **Predicted vs actual lap times:** `plot_predicted_vs_actual(...)` or `plot_predicted_vs_actual_from_laps(...)`; `plot_predicted_vs_actual_plotly(...)` for HTML.
+- **Tire degradation curves:** `plot_degradation_curve(curve_df, ...)` or `plot_degradation_curves_by_compound({compound: df, ...})`.
+- **Strategy timeline:** `plot_strategy_timeline(stints, pit_laps=..., pit_window=...)` or `plot_strategy_timeline_from_laps(...)`; `plot_strategy_timeline_plotly(...)` for HTML.
+- **Export:** `export_figure_png(fig, path)` (matplotlib), `export_plotly_html(fig, path)` (plotly). Output directory: `data/processed/figures/`.
+
+### Case study export (3–5 races, PNG + HTML)
+
+From the project root, run:
+
+```bash
+python export_case_study_plots.py
+```
+
+This loads 3–5 dry races (2023 Bahrain, Spain, Monaco, Silverstone, Monza), generates **predicted vs actual** and **strategy timeline** plots per race/driver, and exports them as PNG and interactive HTML under `data/processed/figures/{year}_{race}/`. Requires network on first run for FastF1 data.
 
 ---
 
