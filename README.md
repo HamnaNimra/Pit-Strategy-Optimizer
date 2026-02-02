@@ -27,6 +27,22 @@ pip install -r requirements.txt
 
 ---
 
+## Testing
+
+From the project root (with dependencies installed):
+
+```bash
+pip install -r requirements.txt
+pytest tests/ -v
+```
+
+- **Unit tests:** `test_pit_loss.py`, `test_preprocess.py`, `test_stint_features.py`, `test_data_pipeline.py`, `test_degradation_model.py`, `test_optimizer.py`, `test_explanation.py` — no network or FastF1 API.
+- **Integration tests:** `test_integration.py` — end-to-end flow from synthetic laps and pit stops through stint features, degradation model fit, optimizer, recommendation, and explanation; and validation flow using `_validate_race` with synthetic data. No live FastF1 calls.
+
+To run only unit or only integration tests: `pytest tests/ -v -k "not integration"` or `pytest tests/test_integration.py -v`.
+
+---
+
 ## Project Structure
 
 ```
@@ -52,9 +68,15 @@ Pit-Strategy-Optimizer/
 ├── notebooks/
 │   └── exploratory_analysis.ipynb
 └── tests/
+    ├── conftest.py           # shared fixtures (synthetic_laps, fitted_degradation_model, etc.)
     ├── test_data_pipeline.py
     ├── test_degradation_model.py
-    └── test_optimizer.py
+    ├── test_explanation.py
+    ├── test_integration.py   # end-to-end (synthetic data only)
+    ├── test_optimizer.py
+    ├── test_pit_loss.py
+    ├── test_preprocess.py
+    ├── test_stint_features.py
 ```
 
 ---
