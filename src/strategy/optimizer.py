@@ -137,11 +137,13 @@ def optimize_pit_window(
         fuel_per_lap_kg,
         track_temp,
     )
-    rows.append({
-        "pit_lap": pd.NA,
-        "compound_after": current_compound.strip().upper(),
-        "total_time_sec": stay_out_time,
-    })
+    rows.append(
+        {
+            "pit_lap": pd.NA,
+            "compound_after": current_compound.strip().upper(),
+            "total_time_sec": stay_out_time,
+        }
+    )
 
     # Pit-on-lap-P scenarios
     for pit_lap in pit_laps:
@@ -175,11 +177,13 @@ def optimize_pit_window(
         else:
             time_new = 0.0
         total_time = time_current + pit_loss_sec + time_new
-        rows.append({
-            "pit_lap": pit_lap,
-            "compound_after": new_compound.strip().upper(),
-            "total_time_sec": total_time,
-        })
+        rows.append(
+            {
+                "pit_lap": pit_lap,
+                "compound_after": new_compound.strip().upper(),
+                "total_time_sec": total_time,
+            }
+        )
 
     df = pd.DataFrame(rows)
     df = df.sort_values("total_time_sec", ascending=True).reset_index(drop=True)
@@ -251,12 +255,18 @@ def pit_window_range(
     tuple of (int or None, int or None)
         (min_pit_lap, max_pit_lap) for the window, or (None, None) if no pit window.
     """
-    if results.empty or "pit_lap" not in results.columns or "time_delta_from_best_sec" not in results.columns:
+    if (
+        results.empty
+        or "pit_lap" not in results.columns
+        or "time_delta_from_best_sec" not in results.columns
+    ):
         return (None, None)
     best = results.iloc[0]
     if pd.isna(best.get("pit_lap")):
         return (None, None)
-    pit_rows = results.loc[results["pit_lap"].notna() & (results["time_delta_from_best_sec"] <= within_sec)]
+    pit_rows = results.loc[
+        results["pit_lap"].notna() & (results["time_delta_from_best_sec"] <= within_sec)
+    ]
     if pit_rows.empty:
         return (None, None)
     min_lap = int(pit_rows["pit_lap"].min())

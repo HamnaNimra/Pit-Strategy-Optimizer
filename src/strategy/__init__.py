@@ -7,7 +7,11 @@ from src.strategy.explanation import (
     explain_when_degradation_overtakes,
     explain_why_pit_window_opens,
 )
-from src.strategy.optimizer import optimize_pit_window, pit_window_range, recommended_pit_lap
+from src.strategy.optimizer import (
+    optimize_pit_window,
+    pit_window_range,
+    recommended_pit_lap,
+)
 from src.strategy.pit_loss import (
     DEFAULT_PIT_LOSS_SECONDS,
     TRACK_PIT_LOSS_SECONDS,

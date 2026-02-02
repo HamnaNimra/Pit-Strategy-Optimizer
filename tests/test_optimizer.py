@@ -81,7 +81,9 @@ def test_pit_window_range_within_sec(fitted_degradation_model):
         pit_loss_overrides={"testtrack": 22.0},
     )
     pmin, pmax = pit_window_range(results, within_sec=2.0)
-    if results.iloc[0].get("pit_lap") is not pd.NA and not pd.isna(results.iloc[0].get("pit_lap")):
+    if results.iloc[0].get("pit_lap") is not pd.NA and not pd.isna(
+        results.iloc[0].get("pit_lap")
+    ):
         assert pmin is not None and pmax is not None
         assert pmin <= pmax
     else:

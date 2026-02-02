@@ -8,7 +8,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from src.strategy.optimizer import optimize_pit_window, pit_window_range, recommended_pit_lap
+from src.strategy.optimizer import (
+    optimize_pit_window,
+    pit_window_range,
+    recommended_pit_lap,
+)
 from src.strategy.sensitivity import (
     sensitivity_degradation,
     sensitivity_pit_loss,
