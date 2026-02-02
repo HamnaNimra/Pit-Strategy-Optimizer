@@ -16,11 +16,25 @@ import pandas as pd
 DEFAULT_FIGSIZE = (10, 4)
 
 # Default colors for compounds (caller can override)
+# Matplotlib: C0, C1, C2. Plotly requires hex/CSS names.
 DEFAULT_COMPOUND_COLORS = {
     "SOFT": "C0",
     "MEDIUM": "C1",
     "HARD": "C2",
 }
+# Plotly-compatible (hex); use in plot_strategy_timeline_plotly when default colors used
+DEFAULT_COMPOUND_COLORS_PLOTLY = {
+    "SOFT": "#1f77b4",
+    "MEDIUM": "#ff7f0e",
+    "HARD": "#2ca02c",
+}
+# Map matplotlib cycle colors to hex for Plotly
+_MATPLOTLIB_TO_PLOTLY = {"C0": "#1f77b4", "C1": "#ff7f0e", "C2": "#2ca02c"}
+
+
+def _plotly_color(color: str) -> str:
+    """Return a Plotly-valid color (hex or CSS name)."""
+    return _MATPLOTLIB_TO_PLOTLY.get(color, color)
 
 
 def plot_strategy_timeline(
@@ -237,12 +251,12 @@ def plot_strategy_timeline_plotly(
         import plotly.graph_objects as go
     except ImportError:
         raise ImportError("plotly is required for HTML export; pip install plotly") from None
-    colors = compound_colors if compound_colors is not None else DEFAULT_COMPOUND_COLORS
+    colors = compound_colors if compound_colors is not None else DEFAULT_COMPOUND_COLORS_PLOTLY
     fig = go.Figure()
     seen_compounds = set()
     for start, end, compound in stints:
         comp_upper = str(compound).upper()
-        color = colors.get(comp_upper, "gray")
+        color = _plotly_color(colors.get(comp_upper, "gray"))
         name = comp_upper if comp_upper not in seen_compounds else None
         if name:
             seen_compounds.add(comp_upper)
