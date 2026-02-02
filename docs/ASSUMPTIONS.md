@@ -36,7 +36,7 @@ The following are **out of scope** for the MVP and are not implemented:
 
 | Area | Exclusion |
 |------|-----------|
-| **Safety car / VSC** | No safety car or virtual safety car modeling. Lap times and pit decisions under SC/VSC are not treated differently. |
+| **Safety car / VSC** | No safety car or virtual safety car modeling. Lap times and pit decisions under SC/VSC are not treated differently. The **VSC scenario** in the CLI and `vsc_recommendation` use a fixed pit-loss factor (e.g. 50%) for illustration only; there is no prediction of when VSC occurs. |
 | **Traffic / multi-car** | Single-car optimization only. No traffic, undercut/overcut interaction, or position-dependent lap time. |
 | **Driver-specific pace** | No driver-specific pace model beyond lap time trends in the data. Degradation is per track and compound, not per driver. |
 | **Live integration** | No real-time or live-race integration. All inputs are from historical or cached session data. |

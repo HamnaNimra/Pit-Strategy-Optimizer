@@ -118,12 +118,15 @@ python run_strategy.py --year 2023 --race Silverstone --driver HAM --lap 25 --ne
 
 First run for a given race may take longer while FastF1 data is fetched and the degradation model is fitted; later runs use cached data and saved models. The CLI also prints **parameter sensitivity** (e.g. "If pit loss ±2 s, recommended pit lap changes by X") and **human-readable strategy explanations** (bullet points).
 
+**Uncertainty-aware output:** The CLI prints a single IRL-usable block: **recommended lap**, **pit window** (laps within 2 s of optimal), **sensitivity** to pit loss (±2 s) and degradation (±0.02 s/lap), and **one VSC scenario** (pit loss ~50%). Use `recommendation_bundle(...)` from `src.strategy` to get the same bundle programmatically.
+
 ### Python API
 
 - **Load race:** `from src.data_pipeline import load_race, add_stint_features` → `data = load_race(year, race_name)`, `laps = add_stint_features(data.laps, data.pit_stops)`.
-- **Optimize:** `from src.strategy import optimize_pit_window, recommended_pit_lap` → `results = optimize_pit_window(...)`, `rec = recommended_pit_lap(results)`.
+- **Optimize:** `from src.strategy import optimize_pit_window, pit_window_range, recommended_pit_lap` → `results = optimize_pit_window(...)`, `rec = recommended_pit_lap(results)`, `pmin, pmax = pit_window_range(results, within_sec=2.0)`.
 - **Explain:** `from src.strategy import explain_strategy` → `ex = explain_strategy(...)`; use `ex["summary_display"]` for bullet-point text.
 - **Sensitivity:** `from src.strategy import sensitivity_pit_loss` → `sens = sensitivity_pit_loss(...)`; `sens["message"]` is human-readable (e.g. pit loss ±2 s impact).
+- **Uncertainty bundle:** `from src.strategy import recommendation_bundle` → `bundle = recommendation_bundle(...)`; returns `recommended_lap`, `pit_window_min/max`, `explanation`, and the three sensitivity/VSC messages in one dict.
 - **Validate:** `from src.validation import run_validation, save_validation_results` → `details, summary = run_validation(races, degradation_model=model)`, `save_validation_results(details, summary)`.
 
 ---
