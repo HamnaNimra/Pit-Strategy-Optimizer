@@ -1,0 +1,1 @@
+"""Pit window optimization. Placeholder."""

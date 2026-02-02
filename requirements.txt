@@ -1,0 +1,6 @@
+FastF1
+pandas
+numpy
+scikit-learn
+matplotlib
+plotly
