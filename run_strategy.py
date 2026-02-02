@@ -18,9 +18,18 @@ def _parse_args() -> argparse.Namespace:
         description="Run pit strategy analysis for a race and driver.",
         epilog="Loads race data, runs the optimizer at the given lap, and prints recommendation and explanation.",
     )
-    parser.add_argument("--year", type=int, required=True, help="Season year (e.g. 2024)")
-    parser.add_argument("--race", type=str, required=True, help="Race name or location (e.g. Monaco, Bahrain)")
-    parser.add_argument("--driver", type=str, required=True, help="Driver code or number (e.g. VER, 1)")
+    parser.add_argument(
+        "--year", type=int, required=True, help="Season year (e.g. 2024)"
+    )
+    parser.add_argument(
+        "--race",
+        type=str,
+        required=True,
+        help="Race name or location (e.g. Monaco, Bahrain)",
+    )
+    parser.add_argument(
+        "--driver", type=str, required=True, help="Driver code or number (e.g. VER, 1)"
+    )
     parser.add_argument(
         "--lap",
         type=int,
@@ -61,12 +70,16 @@ def _state_at_lap(driver_laps, lap: int):
     if row.empty:
         return None, None
     compound = row["Compound"].iloc[0] if "Compound" in row.columns else None
-    lap_in_stint = row["lap_in_stint"].iloc[0] if "lap_in_stint" in row.columns else None
+    lap_in_stint = (
+        row["lap_in_stint"].iloc[0] if "lap_in_stint" in row.columns else None
+    )
     if compound is None:
         return None, None
     if pd.isna(lap_in_stint):
         lap_in_stint = 1
-    return str(compound).strip().upper() if compound else None, int(lap_in_stint) if lap_in_stint is not None else 1
+    return str(compound).strip().upper() if compound else None, (
+        int(lap_in_stint) if lap_in_stint is not None else 1
+    )
 
 
 def main() -> int:
@@ -84,7 +97,10 @@ def main() -> int:
         data = load_race(year, race_name)
     except ValueError as e:
         if "Wet" in str(e) or "dry" in str(e).lower():
-            print("Error: This race was run in wet conditions. Only dry races are supported.", file=sys.stderr)
+            print(
+                "Error: This race was run in wet conditions. Only dry races are supported.",
+                file=sys.stderr,
+            )
         else:
             print(f"Error: {e}", file=sys.stderr)
         return 1
@@ -99,7 +115,10 @@ def main() -> int:
 
     driver_laps = _driver_laps(laps, driver)
     if driver_laps.empty:
-        print(f"Error: No laps found for driver '{driver}'. Check --driver (e.g. VER or driver number).", file=sys.stderr)
+        print(
+            f"Error: No laps found for driver '{driver}'. Check --driver (e.g. VER or driver number).",
+            file=sys.stderr,
+        )
         return 1
 
     total_race_laps = int(laps["LapNumber"].max())
@@ -109,17 +128,57 @@ def main() -> int:
 
     current_compound, lap_in_stint = _state_at_lap(driver_laps, lap)
     if current_compound is None:
-        print(f"Error: Could not determine compound for driver at lap {lap}.", file=sys.stderr)
+        print(
+            f"Error: Could not determine compound for driver at lap {lap}.",
+            file=sys.stderr,
+        )
         return 1
 
     track_id = race_name
 
-    # 2. Run optimizer
+    # 2. Ensure degradation model is fitted for this track and compounds (fit from race data if missing)
     try:
         from src.models.tire_degradation import get_degradation_model
-        from src.strategy.optimizer import optimize_pit_window, recommended_pit_lap
 
         model = get_degradation_model()
+        compounds_needed = {current_compound, new_compound}
+        for comp in compounds_needed:
+            try:
+                model.predict_lap_time(track_id, comp, 1, 100.0)
+            except ValueError:
+                # Not fitted: fit from this race's laps
+                model.fit(
+                    laps,
+                    track_id,
+                    comp,
+                    lap_time_col="LapTime",
+                    lap_in_stint_col="lap_in_stint",
+                    fuel_col="estimated_fuel_kg",
+                )
+        try:
+            model.save()
+        except OSError:
+            print(
+                "Warning: Could not save degradation model to disk; results still use in-memory model.",
+                file=sys.stderr,
+            )
+    except ValueError as e:
+        if "No laps found" in str(e) or "Too few valid" in str(e):
+            print(
+                f"Error: Not enough lap data to fit degradation for {track_id} / {compounds_needed}. Try another race or fit models manually (see docs/CASE_STUDIES.md).",
+                file=sys.stderr,
+            )
+        else:
+            print(f"Error fitting degradation model: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error preparing degradation model: {e}", file=sys.stderr)
+        return 1
+
+    # 3. Run optimizer
+    try:
+        from src.strategy.optimizer import optimize_pit_window, recommended_pit_lap
+
         results = optimize_pit_window(
             current_lap=lap,
             current_compound=current_compound,
@@ -144,18 +203,22 @@ def main() -> int:
 
     rec = recommended_pit_lap(results)
 
-    # 3. Explanation
+    # 4. Explanation
     try:
         from src.strategy.explanation import explain_strategy
 
-        ex = explain_strategy(results, track_id, current_compound, degradation_model=model)
+        ex = explain_strategy(
+            results, track_id, current_compound, degradation_model=model
+        )
     except Exception as e:
         ex = None
         print(f"Warning: Could not generate explanation: {e}", file=sys.stderr)
 
-    # 4. Print recommendation and explanation
+    # 5. Print recommendation and explanation
     print(f"Race: {year} {race_name}  |  Driver: {driver}  |  At lap: {lap}")
-    print(f"Current compound: {current_compound}  |  Lap in stint: {lap_in_stint}  |  New compound: {new_compound}")
+    print(
+        f"Current compound: {current_compound}  |  Lap in stint: {lap_in_stint}  |  New compound: {new_compound}"
+    )
     print()
     if rec is None:
         print("Recommendation: Stay out (no pit).")
