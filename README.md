@@ -151,4 +151,9 @@ Contributions are welcome. Keep behavior aligned with the PRD and document assum
 
 ## License
 
-See repository license file.
+Copyright © 2026 Hamna Nimra. All rights reserved.
+
+This software and associated documentation files are proprietary. 
+Unauthorized copying, modification, distribution, or use of this software via any medium is strictly prohibited.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
