@@ -93,15 +93,30 @@ Pit-Strategy-Optimizer/
 
 ### CLI
 
+**Required:** `--year`, `--race`, `--driver`. **Optional:** `--lap` (default 10), `--new-compound` (default MEDIUM).
+
+The CLI loads race data, ensures the degradation model is fitted for the track and compounds (fitting from race data if missing), runs the optimizer at the given lap, and prints the recommendation and explanation.
+
+**Sample commands:**
+
 ```bash
+# Help and options
+python run_strategy.py --help
+
+# Default lap (10), default new compound (MEDIUM)
 python run_strategy.py --year 2024 --race Monaco --driver VER
+
+# Evaluate at lap 20, pit onto MEDIUM
 python run_strategy.py --year 2024 --race Monaco --driver VER --lap 20 --new-compound MEDIUM
+
+# Different race and driver (driver number)
+python run_strategy.py --year 2024 --race Bahrain --driver 1 --lap 15
+
+# Pit onto HARD
+python run_strategy.py --year 2023 --race Silverstone --driver HAM --lap 25 --new-compound HARD
 ```
 
-- **Required:** `--year`, `--race`, `--driver` (driver code e.g. VER or driver number).
-- **Optional:** `--lap` (default 10), `--new-compound` (default MEDIUM).
-
-The CLI loads race data, adds stint features, runs the optimizer at the given lap for that driver, and prints the recommendation (pit lap or stay out) and a short explanation. The degradation model must be fitted for the track and compounds before use (see [Case studies](docs/CASE_STUDIES.md) for a reproduce script).
+First run for a given race may take longer while FastF1 data is fetched and the degradation model is fitted; later runs use cached data and saved models.
 
 ### Python API
 
