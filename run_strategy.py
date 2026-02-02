@@ -177,7 +177,16 @@ def main() -> int:
 
     # 3. Run optimizer
     try:
-        from src.strategy.optimizer import optimize_pit_window, recommended_pit_lap
+        from src.strategy.optimizer import (
+            optimize_pit_window,
+            pit_window_range,
+            recommended_pit_lap,
+        )
+        from src.utils.config import (
+            DEGRADATION_SENSITIVITY_DELTA_SEC_PER_LAP,
+            PIT_WINDOW_WITHIN_SEC,
+            VSC_PIT_LOSS_FACTOR,
+        )
 
         results = optimize_pit_window(
             current_lap=lap,
@@ -214,7 +223,13 @@ def main() -> int:
         ex = None
         print(f"Warning: Could not generate explanation: {e}", file=sys.stderr)
 
-    # 5. Print recommendation and explanation
+    # 5. Pit window (within 2 s)
+    try:
+        pmin, pmax = pit_window_range(results, within_sec=PIT_WINDOW_WITHIN_SEC)
+    except Exception:  # pylint: disable=broad-except
+        pmin, pmax = None, None
+
+    # 6. Print recommendation and explanation
     print(f"Race: {year} {race_name}  |  Driver: {driver}  |  At lap: {lap}")
     print(
         f"Current compound: {current_compound}  |  Lap in stint: {lap_in_stint}  |  New compound: {new_compound}"
@@ -224,6 +239,8 @@ def main() -> int:
         print("Recommendation: Stay out (no pit).")
     else:
         print(f"Recommendation: Pit on lap {rec}.")
+    if pmin is not None and pmax is not None:
+        print(f"Pit window (within {PIT_WINDOW_WITHIN_SEC} s): laps {pmin}–{pmax}")
     print()
     if ex:
         print("Explanation:")
@@ -231,6 +248,7 @@ def main() -> int:
         # Parameter sensitivity: pit loss ±2 s impact
         try:
             from src.strategy.sensitivity import sensitivity_pit_loss
+
             sens = sensitivity_pit_loss(
                 current_lap=lap,
                 current_compound=current_compound,
@@ -242,6 +260,43 @@ def main() -> int:
                 degradation_model=model,
             )
             print("\nSensitivity (pit loss ±2 s):", sens["message"])
+        except Exception:  # pylint: disable=broad-except
+            pass
+        # Sensitivity: degradation ±0.02 s/lap
+        try:
+            from src.strategy.sensitivity import sensitivity_degradation
+
+            sens_deg = sensitivity_degradation(
+                current_lap=lap,
+                current_compound=current_compound,
+                lap_in_stint=lap_in_stint,
+                total_race_laps=total_race_laps,
+                track_id=track_id,
+                new_compound=new_compound,
+                degradation_delta_sec_per_lap=DEGRADATION_SENSITIVITY_DELTA_SEC_PER_LAP,
+                degradation_model=model,
+            )
+            print(
+                f"\nSensitivity (degradation ±{DEGRADATION_SENSITIVITY_DELTA_SEC_PER_LAP} s/lap):",
+                sens_deg["message"],
+            )
+        except Exception:  # pylint: disable=broad-except
+            pass
+        # VSC scenario
+        try:
+            from src.strategy.sensitivity import vsc_recommendation
+
+            vsc = vsc_recommendation(
+                current_lap=lap,
+                current_compound=current_compound,
+                lap_in_stint=lap_in_stint,
+                total_race_laps=total_race_laps,
+                track_id=track_id,
+                new_compound=new_compound,
+                vsc_pit_loss_factor=VSC_PIT_LOSS_FACTOR,
+                degradation_model=model,
+            )
+            print("\nIf VSC next lap:", vsc["message"])
         except Exception:  # pylint: disable=broad-except
             pass
     return 0
