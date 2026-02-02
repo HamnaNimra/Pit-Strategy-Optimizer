@@ -225,3 +225,40 @@ def recommended_pit_lap(
         if not stay_out.empty and (stay_out["total_time_sec"] <= best_time).any():
             return None
     return int(best["pit_lap"])
+
+
+def pit_window_range(
+    results: pd.DataFrame,
+    *,
+    within_sec: float = 2.0,
+) -> tuple[int | None, int | None]:
+    """
+    Return the pit lap range (min, max) among strategies within `within_sec` of the best.
+
+    Only considers rows with numeric pit_lap (excludes stay-out). If the best
+    strategy is stay-out, or no pit-on-lap rows are within the threshold,
+    returns (None, None).
+
+    Parameters
+    ----------
+    results : pd.DataFrame
+        Output of optimize_pit_window (must have pit_lap, time_delta_from_best_sec).
+    within_sec : float
+        Include strategies with time_delta_from_best_sec <= within_sec.
+
+    Returns
+    -------
+    tuple of (int or None, int or None)
+        (min_pit_lap, max_pit_lap) for the window, or (None, None) if no pit window.
+    """
+    if results.empty or "pit_lap" not in results.columns or "time_delta_from_best_sec" not in results.columns:
+        return (None, None)
+    best = results.iloc[0]
+    if pd.isna(best.get("pit_lap")):
+        return (None, None)
+    pit_rows = results.loc[results["pit_lap"].notna() & (results["time_delta_from_best_sec"] <= within_sec)]
+    if pit_rows.empty:
+        return (None, None)
+    min_lap = int(pit_rows["pit_lap"].min())
+    max_lap = int(pit_rows["pit_lap"].max())
+    return (min_lap, max_lap)
